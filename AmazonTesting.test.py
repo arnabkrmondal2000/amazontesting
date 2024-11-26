@@ -1,44 +1,46 @@
 import time
 import random
-##from tkinter.tix import Select
-from selenium.webdriver.support.select import Select
 from selenium import webdriver
 from selenium.webdriver.common.by import By
-from selenium.webdriver.support.wait import WebDriverWait
 
+# Page classes
+from AmazonHomePage import AmazonHomePage
+from ProductPage import AmazonProductPage
 
-driver = webdriver.Chrome()
-driver.implicitly_wait(5)
-driver.maximize_window()
-driver.get("https://www.amazon.in/")
+def test_amazon_purchase():
+    driver = webdriver.Chrome()
+    driver.implicitly_wait(5)
+    driver.maximize_window()
+    driver.get("https://www.amazon.in/")
 
-driver.find_element(By.CSS_SELECTOR, "#twotabsearchtextbox").send_keys("iPhone 13")
-driver.find_element(By.CSS_SELECTOR, "#nav-search-submit-button").click()
-productList = driver.find_elements(By.CSS_SELECTOR, ".a-size-medium.a-color-base.a-text-normal")
+    # Interact with home page
+    home_page = AmazonHomePage(driver)
+    home_page.search_product("iPhone 13")
 
-list = []
-for product in productList:
-    list.append(product.text)
-print(list)
+    # Get product list and open a product
+    product_list = home_page.get_product_list()
+    print([product.text for product in product_list])
 
-if len(productList)>=4:
-    productList[3].click()
-else:
-    print("less than four products found")
+    # Open the 4th product if it exists
+    home_page.open_product(3)
 
-openWindow = driver.window_handles
-driver.switch_to.window(openWindow[1])
-driver.find_element(By.CSS_SELECTOR, "span[id='submit.buy-now']").click()
-driver.find_element(By.CSS_SELECTOR, "#ap_email").send_keys("abc@gmail.com")
-driver.find_element(By.CSS_SELECTOR, ".a-button-input").click()
-driver.find_element(By.CSS_SELECTOR, "#ap_password").send_keys("125654")
-driver.find_element(By.CSS_SELECTOR, "#signInSubmit").click()
-#####
-Error_Message = driver.find_element(By.CSS_SELECTOR, "ul[class='a-unordered-list a-nostyle a-vertical a-spacing-none'] li").text
-print(Error_Message)
-time.sleep(random.uniform(2, 5))
+    # Switch to the new window after clicking the product
+    open_window = driver.window_handles
+    driver.switch_to.window(open_window[1])
 
+    # Interact with product page
+    product_page = AmazonProductPage(driver)
+    product_page.click_buy_now()
 
-print("All correct")
-#print(len(productList))
-time.sleep(2)
+    # Fill in login details
+    product_page.enter_email("abc@gmail.com")
+    product_page.click_continue()
+    product_page.enter_password("125654")
+    product_page.click_sign_in()
+
+    print("Test completed successfully.")
+    time.sleep(random.uniform(2, 5))
+    driver.quit()
+
+if __name__ == "__main__":
+    test_amazon_purchase()
